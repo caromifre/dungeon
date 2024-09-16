@@ -436,12 +436,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae6845d21560c294192ab9b47b1845d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _x: 10
-  _y: 10
+  _x: 5
+  _y: 5
   _startPos: 0
   _rooms:
   - {fileID: 2406978126415857164, guid: 4efdcae8765dbd5488877547a9f45cff, type: 3}
+  - {fileID: 6489743973778988299, guid: 27e8d5652d74f6a489f87014965f73b5, type: 3}
   offset: {x: 6, y: 6}
+  _Galerias: 0
 --- !u!1001 &561889958
 PrefabInstance:
   m_ObjectHideFlags: 0
