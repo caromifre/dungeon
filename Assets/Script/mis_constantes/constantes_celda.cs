@@ -1,6 +1,6 @@
 
 //libreria de constantes de uso general
-public static class Constantes_celda 
+public static class Constantes_celda
 {
     //constantes para el manejo de las  celdas o habitaciones    
     public const int _PAREDES = 0, //array paredes
@@ -16,8 +16,12 @@ public static class Constantes_celda
                      _ARRIBA_IZQ = 0,//indica posicion pilares
                      _ARIBA_DER = 1,//indica posicion pilares
                      _ABAJO_DER = 2,
-                     _ABAJO_IZQ = 3;//indica posicion pilares
-                     
+                     _ABAJO_IZQ = 3,
+                     _INICIO=0,
+                     _FIN=1;//indica posicion pilares
+
+
+
 
     public const bool 
                     _DESACTIVAR_CELDA=false,

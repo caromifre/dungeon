@@ -16,9 +16,4 @@ public class GameController : MonoBehaviour
       dungeonGenerator.MazeGenerator();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

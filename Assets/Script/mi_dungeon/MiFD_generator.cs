@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
 using static Constantes_celda;
 public class MiFD_generator : MonoBehaviour
 {
-    public class Cell
+   /* public class Cell
     {
         public bool visited = false;
         //public bool[] status = new bool[4];
@@ -19,6 +18,7 @@ public class MiFD_generator : MonoBehaviour
         public int direccion;
         public bool vacio;
         public bool fin;
+        public bool inicio;
 
         public void reset_puerta() {
             //resetear puertas
@@ -33,12 +33,11 @@ public class MiFD_generator : MonoBehaviour
                 pared[a] = false;
             }
         }
-    }
+    }*/
 
     // [SerializeField] Vector2 _dungeonSize;
     [SerializeField] int _x, _y;
     [SerializeField] int _startPos = 0;
-
     [SerializeField] GameObject[] _rooms;
     [SerializeField] Vector2 offset;
     [SerializeField] int _Galerias;
@@ -69,10 +68,12 @@ public class MiFD_generator : MonoBehaviour
             for (int b = 0; b < _y; b++) {
                 if (_board[a, b].visited)
                 {
-                    if (_board[a, b].fin) celda = 1;
-                    else celda = 0;
-                    
-                   // celda = Random.Range(0,_rooms.Length);
+                    if (_board[a, b].inicio) celda = 0;
+                    else if (_board[a, b].fin) celda = 1;
+                    else celda= Random.Range(2, _rooms.Length);
+                  
+
+                    // celda = Random.Range(0,_rooms.Length);
                     //int randomRoom = Random.Range(0, _rooms.Length);
                     _Nueva_celda = Instantiate(_rooms[celda], new Vector3(a * offset.x, 0f, -b * offset.y), Quaternion.identity) as GameObject;
                     Propiedades_celda p_c= _Nueva_celda.GetComponent<Propiedades_celda>();
@@ -91,7 +92,6 @@ public class MiFD_generator : MonoBehaviour
     {
         
         crear_camino();
-        //abrir_puertas();
         crear_galerias();
         GenerateDungeon();
     }
@@ -115,6 +115,7 @@ public class MiFD_generator : MonoBehaviour
     //---
     void crear_camino() {
         _board[0, 0].visited = true;
+        _board[0, 0].inicio=true;
         int ancho = _board.GetLength(0);
         int alto = _board.GetLength(1);
         int cont_x=0,cont_y=0,x_pos,y_pos,pasos;
@@ -193,40 +194,37 @@ public class MiFD_generator : MonoBehaviour
                     case 0: //izquierda
                         x_pos -= 1;
                         _board[x_pos, cont_y].visited = true;
+                        _board[cont_x, y_pos].direccion = rand_avance;
                         //abrir puertas tirar pared
                         _board[x_pos, cont_y].pared[_DERECHA] = true;                        
                         _board[x_pos + 1, cont_y].puerta[_IZQUIERDA] = true;
-                        //guardar direccion
-                        _board[x_pos+1, cont_y].direccion = rand_avance;
                         cont_x--;//retroceder
                         break;
                     case 1: //derecha
                         x_pos += 1;
                         _board[x_pos, cont_y].visited = true;
+                        _board[cont_x, y_pos].direccion = rand_avance;
                         //abrir puertas tirar pared
                         _board[x_pos, cont_y].pared[_IZQUIERDA] = true;                        
                         _board[x_pos - 1, cont_y].puerta[_DERECHA] = true;
-                        //guardar direccion
-                        _board[x_pos-1, cont_y].direccion = rand_avance;
                         cont_x++;//avanzar
                         break;
                     case 2://abajo
                         y_pos += 1;
                         _board[cont_x, y_pos].visited = true;
+                        _board[cont_x, y_pos].direccion = rand_avance;
                         //abrir puertas tirar pared
                         _board[cont_x, y_pos].pared[_ARRIBA] = true;
-                        _board[cont_x, y_pos - 1].puerta[_ABAJO]= true;
-                        //guardar direccion
-                        _board[x_pos, cont_y-1].direccion = rand_avance;
+                        _board[cont_x, y_pos - 1].puerta[_ABAJO]= true;                      
                         cont_y++;//avanzar en y
                         break;
                     case 3://arriba
                         y_pos -= 1;
                         _board[cont_x, y_pos].visited = true;
+                        _board[cont_x, y_pos].direccion= rand_avance;
                         //abrir puertas tirar pared
                         _board[cont_x, y_pos].pared[_ABAJO] = true;
-                        _board[cont_x, y_pos + 1].puerta[_ARRIBA] = true;
-                        _board[x_pos, cont_y + 1].direccion = rand_avance;
+                        _board[cont_x, y_pos + 1].puerta[_ARRIBA] = true;                
                         cont_y--;//retroceder en y
                         break;
                 }
@@ -236,7 +234,7 @@ public class MiFD_generator : MonoBehaviour
             //si sali del limite marco la casilla como final
             if (cont_x >= ancho)
             {
-                Debug.Log("ancho: " + ancho + "alto: " + alto + " cont_x: " + cont_x + "cont_Y: " + cont_y);
+               // Debug.Log("ancho: " + ancho + "alto: " + alto + " cont_x: " + cont_x + "cont_Y: " + cont_y);
                 _board[ancho - 1, cont_y].fin = true;
                 _board[ancho - 1, cont_y].visited = true;
                 crear_nexo(ancho - 1, cont_y);
@@ -252,30 +250,89 @@ public class MiFD_generator : MonoBehaviour
         //funcion o "método" para unir los caminos en cada nueva iteracion
         int ancho = _board.GetLength(0), largo = _board.GetLength(1);
     
-        if (pos_x - 1 >= 0 && _board[pos_x - 1, pos_y].visited)
+        if (pos_x - 1 >= 0 && _board[pos_x - 1, pos_y].visited )
         {
-            _board[pos_x, pos_y].pared[_IZQUIERDA] = true;
-            _board[pos_x-1, pos_y].puerta[_DERECHA] = true;
+            if (!_board[pos_x - 1, pos_y].galeria)
+            {
+                _board[pos_x, pos_y].pared[_IZQUIERDA] = true;
+                _board[pos_x - 1, pos_y].puerta[_DERECHA] = true;
+                //chequear conflicto de paredes
+                if (_board[pos_x, pos_y].pared[_IZQUIERDA] && _board[pos_x - 1, pos_y].pared[_DERECHA])
+                {
+                    _board[pos_x - 1, pos_y].pared[_DERECHA] = false;
+                }
+            }
+            else {
+                //chequear conflicto de paredes para las galerias para encontrar el limite
+                if (!_board[pos_x, pos_y].pared[_IZQUIERDA] /*&& !_board[pos_x - 1, pos_y].pared[_DERECHA]*/)
+                {
+                    //crear una puerta
+                    _board[pos_x, pos_y].puerta[_IZQUIERDA] = true;
+                    _board[pos_x - 1, pos_y].puerta[_DERECHA] = true;
+                }
+            }
         }
 
-        if (pos_x + 1 < ancho && _board[pos_x + 1, pos_y].visited)
+        if (pos_x + 1 < ancho && _board[pos_x + 1, pos_y].visited /*&& !_board[pos_x + 1, pos_y].galeria*/)
         {
-            _board[pos_x, pos_y].pared[_DERECHA] = true;
-            _board[pos_x + 1, pos_y].puerta[_IZQUIERDA] = true;
+            if (!_board[pos_x + 1, pos_y].galeria)
+            {
+                _board[pos_x, pos_y].pared[_DERECHA] = true;
+                _board[pos_x + 1, pos_y].puerta[_IZQUIERDA] = true;
+                //chequear conclito de paredes
+                if (_board[pos_x, pos_y].pared[_DERECHA] && _board[pos_x + 1, pos_y].pared[_IZQUIERDA])
+                {
+                    _board[pos_x + 1, pos_y].pared[_IZQUIERDA] = false;
+                }
+            }
+            else {
+                if (!_board[pos_x, pos_y].pared[_DERECHA] /*&& !_board[pos_x + 1, pos_y].pared[_IZQUIERDA]*/) {
+                    _board[pos_x, pos_y].puerta[_DERECHA] = true;
+                    _board[pos_x + 1, pos_y].puerta[_IZQUIERDA] = true;
+                }
+            }
         }
 
 
-        if (pos_y + 1 < largo && _board[pos_x, pos_y + 1].visited)
+        if (pos_y + 1 < largo && _board[pos_x, pos_y + 1].visited /*&& !_board[pos_x, pos_y + 1].galeria*/)
         {
-            _board[pos_x, pos_y].pared[_ABAJO] = true;
-            _board[pos_x, pos_y+1].puerta[_ARRIBA] = true;
+            if (!_board[pos_x, pos_y + 1].galeria)
+            {
+                _board[pos_x, pos_y].pared[_ABAJO] = true;
+                _board[pos_x, pos_y + 1].puerta[_ARRIBA] = true;
+                //chequear conclito de paredes
+                if (_board[pos_x, pos_y].pared[_ABAJO] && _board[pos_x, pos_y + 1].pared[_ARRIBA])
+                {
+                    _board[pos_x, pos_y + 1].pared[_ARRIBA] = false;
+                }
+            }
+            else {
+                if (!_board[pos_x, pos_y].pared[_ABAJO] /*&& !_board[pos_x, pos_y + 1].pared[_ARRIBA]*/) {
+                    _board[pos_x, pos_y].puerta[_ABAJO] = true;
+                    _board[pos_x, pos_y + 1].puerta[_ARRIBA] = true;
+                }
+            }
         }
 
 
-        if (pos_y - 1 >= 0 && _board[pos_x, pos_y - 1].visited)
+        if (pos_y - 1 >= 0 && _board[pos_x, pos_y - 1].visited /*&& !_board[pos_x, pos_y - 1].galeria*/)
         {
-            _board[pos_x, pos_y].pared[_ARRIBA] = true;
-            _board[pos_x, pos_y - 1].puerta[_ABAJO] = true;
+            if (!_board[pos_x, pos_y - 1].galeria)
+            {
+                _board[pos_x, pos_y].pared[_ARRIBA] = true;
+                _board[pos_x, pos_y - 1].puerta[_ABAJO] = true;
+                //chequear conclito de paredes
+                if (_board[pos_x, pos_y].pared[_ARRIBA] && _board[pos_x, pos_y - 1].pared[_ABAJO])
+                {
+                    _board[pos_x, pos_y - 1].pared[_ABAJO] = false;
+                }
+            }
+            else {
+                if (!_board[pos_x, pos_y].pared[_ARRIBA] /*&& !_board[pos_x, pos_y - 1].pared[_ABAJO]*/) {
+                    _board[pos_x, pos_y].puerta[_ARRIBA] = true;
+                    _board[pos_x, pos_y - 1].puerta[_ABAJO] = true;
+                }
+            }
         }
 
     }
@@ -376,14 +433,15 @@ public class MiFD_generator : MonoBehaviour
                 n_pasos = 0; 
                 break;
         }
-        return n_pasos;
+        //devuelve una distancia variable si la distancia es mayor a 0
+        return n_pasos>0 ?  Random.Range(1, n_pasos) : 0;
     }
 
     //---
     //------------------------
     //---
     void Crear_pasillos(int pos_x, int pos_y) {
-        //funcion o "método" para detectar si se puede rear un pasillo
+        //funcion o "método" para detectar si se puede crear un pasillo
         //los pasillos no pueden ser de mas d ela mitad del largo o del ancho de la mazmorra
         //la celda 0.0 no puede ser un pasillo
         //las celdas que se convierten en pasillos se marcan como tal
@@ -496,7 +554,11 @@ public class MiFD_generator : MonoBehaviour
         }
     }
 
-    void crear_galerias(int x=1,int y=1) {
+    //---
+    //------
+    //---
+
+    void crear_galerias() {
         //funcion para agregar galerias a la mazmorra
         //la galeria no puede solaparse con la celda donde parece el jugador
         //lo minimo que ocupa una galeria son 4 celdas puede tener un pasillo que la 
@@ -526,68 +588,132 @@ public class MiFD_generator : MonoBehaviour
                 }
             }
         }*/
-        int ancho = _board.GetLength(0), alto = _board.GetLength(1), lim_x, lim_y;
+        int ancho = _board.GetLength(0), alto = _board.GetLength(1)/*,lim_x, lim_y*/;
         const int EJE_X = 0,EJE_Y=1;
-        int[] coord_board = new int[1];
+        int max_gal = _board.Length / 4;
+        int[] coord_board;
         List<int[]> Lista_coord = new List<int[]>();
-
-        lim_x = x < 1 ? 1 : x;
-        lim_y = y < 1 ? 1 : y;
 
         for (int a = 0; a < ancho; a++) {
             for (int b = 0; b < alto; b++) {
-                if (_board[a,b].visited){
-                    coord_board[EJE_X] = a;
-                    coord_board[EJE_Y] = b;
+                //busco las celdas activas y que no sean galerias no sean el fin y dentro de los limites
+                if (_board[a, b].visited && !_board[a, b].galeria && !_board[a, b].fin && !_board[a, b].inicio)
+                {
+                    coord_board = new int[2] { a, b };
                     Lista_coord.Add(coord_board);
+                    //Debug.Log("a,b: " + a + ", " + b);
                 }
             }
         }
 
-        //crear primer galeria en el anteultimo elemento
-        coord_board = Lista_coord[Lista_coord.Count-2];
-
-        //testear por cuadrante probar arriba a la izquierda
-        int pos_x = coord_board[EJE_X], pos_y=coord_board[EJE_Y];
-        int cont_pos = 0;
-
-        //probar limite de la diagonal galeria arriba a la izquierda
-        if (pos_y - 1 >= 0 && pos_x - 1 >= 0 && !_board[pos_x-1,pos_y-1].galeria) { 
-            //si la diagonal no fallo el esapcio esta libre para dibujar una galeria
-            //1ro restedo la casilla
-
-        }
         
-        if (pos_x - 1 >= 0 && _board[pos_x - 1, pos_y].visited)
-        {
-            //chequea desplazameintoa a la izquierda
-        }
+        //Debug.Log(" lista" + Lista_coord.Count  );
+        for (int a = Lista_coord.Count - 1; a >= 0; a--) {
+            //crear primer galeria en el anteultimo elemento
+            if (Lista_coord.Count - 1 == a) coord_board = Lista_coord[a];
 
-        if (pos_x + 1 < ancho && _board[pos_x + 1, pos_y].visited)
-        {
-            //chequea desplazameintoa a la derecha
-        }
+            else if (Lista_coord.Count / 4 == a) coord_board = Lista_coord[a];
 
+            else if (Lista_coord.Count / 2 == a) coord_board = Lista_coord[a];
+            else coord_board = Lista_coord[Lista_coord.Count - 1];
 
-        if (pos_y + 1 < alto && _board[pos_x, pos_y + 1].visited)
-        {
-            //chequea desplazameintoa hacia abajo
-        }
+            Debug.Log("testeando lista: " + a);
+            //testear por cuadrantes
+            int pos_x = coord_board[EJE_X], pos_y = coord_board[EJE_Y];
+            
+            //probar limite de la diagonal galeria arriba a la izquierda
+            if (pos_y - 1 >= 0 && pos_x - 1 >= 0 && !_board[pos_x - 1, pos_y - 1].galeria)
+            {
+                Debug.Log("//probar limite de la diagonal galeria arriba a la izquierda");
+                hacer_galeria(pos_x - 1, pos_y - 1, pos_x, pos_y);
+            }
+            //probar limite diagonal arriba derecho
+            if (pos_y - 1 >= 0 && pos_x + 1 < ancho && !_board[pos_x + 1, pos_y - 1].galeria)
+            {
+                Debug.Log("//probar limite diagonal arriba derecho");
+                hacer_galeria(pos_x, pos_y - 1, pos_x + 1, pos_y);
+            }
+            //probar limite diagonal abajo izquierda
+            if (pos_y + 1 < alto && pos_x - 1 >= 0 && !_board[pos_x - 1, pos_y + 1].galeria)
+            {
+                Debug.Log("//probar limite diagonal abajo izquierda");
+                hacer_galeria(pos_x - 1, pos_y, pos_x, pos_y + 1);
+            }
 
-
-        if (pos_y - 1 >= 0 && _board[pos_x, pos_y - 1].visited)
-        {
-            //chequea desplazameintoa hacia arriba
-        }
+            //probar diagonal abajo a la derecha
+            if (pos_y + 1 < alto && pos_x + 1 < ancho && !_board[pos_x + 1, pos_y + 1].galeria)
+            {
+                Debug.Log("//probar diagonal abajo a la derecha");
+                hacer_galeria(pos_x, pos_y, pos_x + 1, pos_y + 1);
+            }
+        }       
 
     }
     //---
     //------
     //---
-     void espacio_galeria(int pos_x, int pos_y,int lim_x,int lim_y)
-    {
-        
+    void hacer_galeria(int ini_x, int ini_y, int lim_x, int lim_y) {
+        //crea una galeria si posible en el espacio propuesto 
+        //ini's tienen que ser la coordenadas menores del sector
+        //lim's las cooredenadas mayores para correr el bucle
+        int cont = 0;
+        bool gal;
+        for(int c=0;c<=1;c++){
+            
+            gal = cont == 4 ? true : false;
+
+            for (int a = ini_x; a <= lim_x; a++)
+            {
+                for (int b = ini_y; b <= lim_y; b++)
+                {
+                    if (!_board[a, b].galeria && !_board[a, b].inicio && !_board[a, b].fin && !gal)
+                    {
+                        cont++;
+                        Debug.Log("conteos:" + cont);
+                    }
+                    if (gal) {
+                        _board[a, b].reset_pared();
+                        _board[a, b].reset_puerta();
+                        _board[a,b].visited = true;
+                        _board[a, b].galeria = true;
+                        //crear compartimientos
+                        Debug.Log("creando a,b:" + a+", " +b +" cont: " +cont);
+
+                        if (cont == 4) {
+                            //estoy arriba a la izquierda                             
+                            _board[a, b].pared[_ABAJO] = true;
+                            _board[a, b].pared[_DERECHA] = true;
+                            crear_nexo(a, b);
+                        }
+                        if (cont == 3) {
+                            //estoy arriba a la derecha                            
+                            _board[a, b].pared[_DERECHA] = true;
+                            _board[a, b].pared[_ARRIBA] = true;
+                            crear_nexo(a, b);
+                        }
+                        if (cont == 2) {
+                            //estoy abajo a la izquierda                            
+                            _board[a, b].pared[_ABAJO] = true;
+                            _board[a, b].pared[_IZQUIERDA] = true;
+                            crear_nexo(a, b);
+                        }
+                        if (cont == 1) {
+                            //estoy anajo a la derecha
+                            _board[a, b].pared[_ARRIBA] = true;
+                            _board[a, b].pared[_IZQUIERDA] = true;
+                            crear_nexo(a, b);
+                        }
+
+                        Debug.Log("descuento cont: " + cont);
+                        cont--;
+                    }
+                }
+            }
+            
+        }
+        //return cont;
     }
+    
 
 
     private void OnGUI()
